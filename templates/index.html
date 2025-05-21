@@ -1,1 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MINDS</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f9;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
+    .header {
+      width: 100%;
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 1.5px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .container {
+      display: flex;
+      width: 80%;
+      margin-top: 30px;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+      gap: 20px;
+    }
+
+    .history {
+      width: 30%;
+      background: #ecf0f1;
+      padding: 20px;
+      border-radius: 8px;
+      height: 500px;
+      overflow-y: auto;
+      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .history h3 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    .history ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .history li a {
+      text-decoration: none;
+      color: #34495e;
+      display: block;
+      padding: 10px;
+      border-radius: 5px;
+      transition: 0.3s;
+      background: white;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      position: relative;
+    }
+
+    .history li a:hover {
+      background: #bdc3c7;
+    }
+
+    .history li a:hover::after {
+      content: attr(title);
+      position: absolute;
+      left: 105%;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #2c3e50;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .main-content {
+      width: 70%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .upload-section, .output {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .upload-section {
+      text-align: center;
+    }
+
+    .upload-form {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .upload-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #001f3f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .upload-button:hover {
+      background-color: #003366;
+    }
+
+    #file-name {
+      font-style: italic;
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .output {
+      max-height: 400px;
+      overflow-y: auto;
+      display: none;
+    }
+
+    footer {
+      margin-top: 30px;
+      width: 100%;
+      text-align: center;
+      padding: 15px;
+      background: #2c3e50;
+      color: white;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    .loading::after {
+      content: "...";
+      animation: dots 1s steps(5, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: "."; }
+      40% { content: ".."; }
+      60% { content: "..."; }
+      80%, 100% { content: ""; }
+    }
+  </style>
+  <script>
+    function loadHistory() {
+      fetch('/history')
+        .then(response => response.json())
+        .then(data => {
+          const historyList = document.getElementById("historyList");
+          historyList.innerHTML = "";
+          data.forEach((item, index) => {
+            const li = document.createElement("li");
+            const a = document.createElement("a");
+            a.textContent = item.name;
+            a.title = item.name;
+            a.href = "#";
+            a.onclick = () => showHistory(index);
+            li.appendChild(a);
+            historyList.appendChild(li);
+          });
+        })
+        .catch(error => {
+          console.error("Error loading history:", error);
+        });
+    }
+
+    function showHistory(index) {
+      fetch('/history')
+        .then(response => response.json())
+        .then(data => {
+          const entry = data[index];
+          document.getElementById("transcript").textContent = entry.transcript;
+          document.getElementById("summary").textContent = entry.summary;
+          document.getElementById("outputSection").style.display = "block";
+        })
+        .catch(error => {
+          console.error("Error showing history entry:", error);
+        });
+    }
+
+    function downloadPDF() {
+      const loadingIndicator = document.getElementById('loading-pdf');
+      const downloadButton = document.getElementById('download-button');
+      const errorMessage = document.getElementById('pdf-error');
+      
+      errorMessage.textContent = '';
+      errorMessage.style.display = 'none';
+      loadingIndicator.style.display = 'block';
+      downloadButton.disabled = true;
+      
+      const transcript = document.getElementById('transcript').textContent;
+      const summary = document.getElementById('summary').textContent;
+
+      fetch('/download_pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ transcript, summary })
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(data => {
+            throw new Error(data.error || 'Failed to generate PDF');
+          });
+        }
+        return response.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'meeting_summary.pdf';
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          a.remove();
+        }, 100);
+      })
+      .catch(error => {
+        console.error('Download error:', error);
+        errorMessage.textContent = `Error: ${error.message}`;
+        errorMessage.style.display = 'block';
+      })
+      .finally(() => {
+        loadingIndicator.style.display = 'none';
+        downloadButton.disabled = false;
+      });
+    }
+
+    function uploadFile() {
+      const fileInput = document.getElementById('file');
+      const statusDiv = document.getElementById('status');
+      
+      if (!fileInput.files || fileInput.files.length === 0) {
+          alert("Please select a file first");
+          return;
+      }
+      
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      
+      statusDiv.textContent = "Uploading file...";
+      
+      fetch('/upload', {
+          method: 'POST',
+          body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.error) {
+              statusDiv.textContent = "Error: " + data.error;
+          } else {
+              statusDiv.textContent = "Processing started. Job ID: " + data.job_id;
+              checkJobStatus(data.job_id);
+          }
+      })
+      .catch(error => {
+          statusDiv.textContent = "Error: " + error;
+      });
+    }
+
+    function checkJobStatus(jobId) {
+      const statusDiv = document.getElementById('status');
+      const transcriptDiv = document.getElementById('transcript');
+      const summaryDiv = document.getElementById('summary');
+      const outputSection = document.getElementById('outputSection');
+      
+      fetch('/job_status/' + jobId)
+      .then(response => response.json())
+      .then(data => {
+          if (data.status === 'converting_audio') {
+              statusDiv.textContent = "Converting audio file...";
+              setTimeout(() => checkJobStatus(jobId), 2000);
+          } else if (data.status === 'transcribing') {
+              statusDiv.textContent = "Transcribing audio...";
+              setTimeout(() => checkJobStatus(jobId), 2000);
+          } else if (data.status === 'summarizing') {
+              statusDiv.textContent = "Generating summary...";
+              setTimeout(() => checkJobStatus(jobId), 2000);
+          } else if (data.status === 'completed') {
+              statusDiv.textContent = "Processing complete!";
+              transcriptDiv.textContent = data.transcript;
+              summaryDiv.textContent = data.summary;
+              outputSection.style.display = "block";
+              loadHistory(); // Update the history section dynamically
+          } else if (data.status === 'failed') {
+              statusDiv.textContent = "Processing failed: " + data.error;
+          } else {
+              statusDiv.textContent = "Unknown status: " + data.status;
+          }
+      })
+      .catch(error => {
+          statusDiv.textContent = "Error checking status: " + error;
+          console.error(error);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const fileInput = document.getElementById("file");
+      const fileName = document.getElementById("file-name");
+
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files.length > 0) {
+          fileName.textContent = fileInput.files[0].name;
+        } else {
+          fileName.textContent = "";
+        }
+      });
+
+      loadHistory();
+
+      const transcript = document.getElementById("transcript").textContent.trim();
+      const summary = document.getElementById("summary").textContent.trim();
+      if (transcript || summary) {
+        document.getElementById("outputSection").style.display = "block";
+      }
+
+      const form = document.querySelector(".upload-form");
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!fileInput.files.length) {
+          alert("Please select a file first.");
+        } else {
+          uploadFile();
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="header">MINDS - Meeting INtelligent Documentation System</div>
+  <div class="container">
+    <div class="history">
+      <h3>History</h3>
+      <ul id="historyList"></ul>
+    </div>
+    <div class="main-content">
+      <div class="upload-section">
+        <h3>Choose File to Upload</h3>
+        <form class="upload-form">
+          <input type="file" id="file" name="file" required hidden>
+          <label for="file" class="upload-button">Choose File</label>
+          <span id="file-name"></span>
+          <button type="submit" class="upload-button">Upload</button>
+        </form>
+        <div id="status"></div>
+      </div>
+
+      <div id="outputSection" class="output">
+        <h3>Full Transcript:</h3>
+        <p id="transcript"></p>
+        <h3>Summary:</h3>
+        <p id="summary"></p>
+        <button id="download-button" class="upload-button" onclick="downloadPDF()">Download PDF</button>
+        <div id="loading-pdf" class="loading">Generating PDF</div>
+        <p id="pdf-error" class="error-message" style="display: none;"></p>
+      </div>
+    </div>
+  </div>
+  <footer>&copy; 2025 AI Meeting Notes Summarizer. All rights reserved.</footer>
+</body>
+</html>
