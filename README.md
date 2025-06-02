@@ -52,8 +52,8 @@ source venv/bin/activate   # On Windows use: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 ### 5. **Set your Hugging Face API key**
-```sh
 Create a .env file in the root directory:
+```sh
 HUGGINGFACE_API_KEY=your_huggingface_api_key
 ```
 ### 6. **Run the app**
