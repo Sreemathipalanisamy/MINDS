@@ -1,6 +1,6 @@
 # MINDS
 
-MINDS is a web application that allows users to upload audio recordings (e.g., meetings, interviews), automatically transcribe them, and generate AI-powered summaries. The app also enables users to download structured PDF reports containing the transcript and summary.
+**MINDS** is a web application that allows users to upload audio recordings (e.g., meetings, interviews), automatically transcribe them, and generate AI-powered summaries. The app also enables users to download structured PDF reports containing the transcript and summary.
 
 ---
 
@@ -34,36 +34,37 @@ MINDS is a web application that allows users to upload audio recordings (e.g., m
 
 To run **MINDS** locally, follow these steps:
 
-### 1. Clone the repository
-
+### **1. Clone the repository**
+```sh
 git clone https://github.com/your-username/MINDS.git
-
-### 2. Navigate to the project directory
-
+```
+### 2. **Navigate to the project directory**
+```sh
 cd audio-summarizer
-### 3. Create a virtual environment and activate it
-
+```
+### 3. **Create a virtual environment and activate it**
+```sh
 python -m venv venv
 source venv/bin/activate   # On Windows use: venv\Scripts\activate
-
-### 4. Install the dependencies
-
+```
+### 4. **Install the dependencies**
+```sh
 pip install -r requirements.txt
-
-### 5. Set your Hugging Face API key
-
+```
+### 5. **Set your Hugging Face API key**
+```sh
 Create a .env file in the root directory:
 HUGGINGFACE_API_KEY=your_huggingface_api_key
-
-### 6. Run the app
-
+```
+### 6. **Run the app**
+```sh
 python app.py
-
-### 7. Access the application
-
+```
+### 7. **Access the application**
 Open your browser and go to:
+```sh
 http://localhost:5000
-
+```
 ---
 
 ## Usage
